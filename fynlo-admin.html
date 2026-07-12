@@ -3491,7 +3491,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Neon keepalive — ping immediately on load + every 4 minutes
   // This wakes Neon from cold start right away so first API call is fast
   const pingNeon = async () => {
-    if (API_BASE_URL.includes('YOUR-RAILWAY-URL')) return;
+    if (API_BASE_URL.includes('https://fynlo-new.onrender.com')) return;
     try { await fetch(API_BASE_URL.replace('/api','') + '/health', { method: 'GET' }); }
     catch(e) {}
   };
