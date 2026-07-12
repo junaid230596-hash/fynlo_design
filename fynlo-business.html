@@ -1400,7 +1400,7 @@ const DEL   = (url)       => api(url, { method: 'DELETE' });
 
 async function api(endpoint, options = {}) {
   // Check if URL is still placeholder
-  if (API_BASE_URL.includes('https://fynlo-new.onrender.com')) {
+  if (API_BASE_URL.includes('https://fynlo-new.onrender.com/api/')) {
     showToast('⚠️ Please set your Railway URL in saas.html', 'error');
     throw new Error('Railway URL not configured');
   }
