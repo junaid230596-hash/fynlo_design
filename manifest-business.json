@@ -1,13 +1,14 @@
 {
+  "id": "/fynlo-business.html",
   "name": "Fynlo Business",
   "short_name": "Fynlo",
   "description": "Fynlo — inventory, invoicing, attendance, payroll and GST for your shop",
   "start_url": "./fynlo-business.html",
-  "scope": "./",
+  "scope": "./fynlo-business.html",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f1f5f9",
-  "theme_color": "#0369a1",
+  "theme_color": "#0F9488",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

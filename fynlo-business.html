@@ -4884,7 +4884,7 @@ async function removeGroupMember(convId, userId) {
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('SW registration failed:', err));
+    navigator.serviceWorker.register('./sw-business.js', { scope: './fynlo-business.html' }).catch((err) => console.warn('SW registration failed:', err));
   });
 }
 </script>

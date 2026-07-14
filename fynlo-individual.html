@@ -1756,7 +1756,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('SW registration failed:', err));
+    navigator.serviceWorker.register('./sw-individual.js', { scope: './fynlo-individual.html' }).catch((err) => console.warn('SW registration failed:', err));
   });
 }
 </script>
