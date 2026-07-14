@@ -1259,6 +1259,7 @@ function buildNav() {
   const allAdminPages = [
     { id: 'dashboard',      icon: '📊', label: 'Dashboard' },
     { id: 'shopkeepers',    icon: '🏪', label: 'Businesses' },
+    { id: 'individuals',    icon: '🧑', label: 'Individuals' },
     { id: 'all-products',   icon: '📦', label: 'All Products' },
     { id: 'all-invoices',   icon: '📄', label: 'All Invoices' },
     { id: 'analytics',      icon: '📈', label: 'Analytics' },
@@ -1323,7 +1324,7 @@ function buildNav() {
   // Mobile drawer nav
   const drawerGroups = isAdmin
     ? [
-        { label: 'Overview',  items: ['dashboard','shopkeepers'].map(pageById).filter(Boolean) },
+        { label: 'Overview',  items: ['dashboard','shopkeepers','individuals'].map(pageById).filter(Boolean) },
         { label: 'Data',      items: ['all-products','all-invoices','analytics'].map(pageById).filter(Boolean) },
         { label: 'Platform',  items: ['notifications','chat','feedback','admins','data-explorer','settings'].map(pageById).filter(Boolean) },
       ]
@@ -1430,6 +1431,9 @@ async function renderPage(page) {
           state.cache.businesses = await GET('/businesses').catch(() => []);
           el.innerHTML = renderShopkeepersList(); break;
 
+        case 'individuals':
+          await renderIndividualsPage(); break;
+
         case 'all-products':
           await renderAllProductsAPI(); break;
 
@@ -1511,7 +1515,9 @@ function renderAdminDashboard() {
   const shops = state.cache.businesses || [];
   const active = shops.filter(s => s.status === 'active').length;
   const suspended = shops.length - active;
-  const totalRev = shops.reduce((s, sh) => s + (sh.total_revenue || 0), 0);
+  const proShops = shops.filter(s => s.subscription_plan === 'Pro').length;
+  const mrr = proShops * 999; // Fynlo's own subscription revenue — what businesses pay Fynlo, not their own sales
+  const totalRev = shops.reduce((s, sh) => s + (sh.total_revenue || 0), 0); // total sales volume flowing through all shops (GMV) — not Fynlo's revenue
   const totalMRev = shops.reduce((s, sh) => s + (sh.monthly_revenue || 0), 0);
   const totalInv = shops.reduce((s, sh) => s + (sh.total_invoices || 0), 0);
   const totalEmps = shops.reduce((s, sh) => s + (sh.total_employees || 0), 0);
@@ -1544,8 +1550,9 @@ function renderAdminDashboard() {
       <div style="position:absolute;right:-30px;top:-30px;width:200px;height:200px;background:rgba(255,255,255,0.05);border-radius:50%;"></div>
       <div style="position:absolute;right:60px;bottom:-50px;width:140px;height:140px;background:rgba(255,255,255,0.04);border-radius:50%;"></div>
       <div style="position:relative;">
-        <div style="font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Platform Total Revenue (All-Time)</div>
-        <div style="font-size:48px;font-weight:800;line-height:1;margin-bottom:16px;">$${totalRev.toLocaleString()}</div>
+        <div style="font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Fynlo Subscription Revenue (MRR)</div>
+        <div style="font-size:48px;font-weight:800;line-height:1;margin-bottom:4px;">₹${mrr.toLocaleString()}<span style="font-size:16px;font-weight:600;opacity:0.7;">/month</span></div>
+        <div style="font-size:12px;opacity:0.65;margin-bottom:16px;">${proShops} business${proShops===1?'':'es'} on Pro · ₹${totalRev.toLocaleString()} in total sales volume across all shops</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:12px;">
           <div><div style="font-size:22px;font-weight:800;">${shops.length}</div><div style="font-size:11px;opacity:0.7;margin-top:2px;">Total Businesses</div></div>
           <div><div style="font-size:22px;font-weight:800;color:#86efac;">${active}</div><div style="font-size:11px;opacity:0.7;margin-top:2px;">Active Shops</div></div>
@@ -1558,7 +1565,7 @@ function renderAdminDashboard() {
     <!-- STAT CARDS ROW -->
     <div class="stats-row" style="margin-bottom:24px;">
       <div class="stat-card">
-        <div class="flex gap-3 items-center"><div class="stat-icon green">💰</div><div class="stat-value" style="color:var(--success);">$${(totalMRev/1000).toFixed(1)}K</div></div>
+        <div class="flex gap-3 items-center"><div class="stat-icon green">💰</div><div class="stat-value" style="color:var(--success);">₹${(totalMRev/1000).toFixed(1)}K</div></div>
         <div class="stat-label">This Month (All Shops)</div>
         <div class="stat-change up">↑ 18% vs last month</div>
       </div>
@@ -1605,7 +1612,7 @@ function renderAdminDashboard() {
                 </div>
               </td>
               <td style="font-size:12px;color:var(--text-2);">${s.name}</td>
-              <td style="font-weight:700;color:var(--success);">$${((s.total_revenue||0)/1000).toFixed(1)}K</td>
+              <td style="font-weight:700;color:var(--success);">₹${((s.total_revenue||0)/1000).toFixed(1)}K</td>
               <td><span class="badge ${s.status === 'active' ? 'badge-success' : 'badge-danger'}">${s.status}</span></td>
               <td><button class="tbl-action" onclick="event.stopPropagation();viewShopkeeperModal('${s.id}')">👁️</button></td>
             </tr>`).join('')}
@@ -1644,6 +1651,53 @@ function renderAdminDashboard() {
       </div>
     </div>
   `;
+}
+
+async function renderIndividualsPage() {
+  const el = document.getElementById('page-content');
+  el.innerHTML = `<div class="page-head"><h1>Individual Accounts</h1><p>Loading...</p></div>`;
+  try {
+    const people = await GET('/admin/individuals');
+    state.cache.individuals = people;
+    el.innerHTML = renderIndividualsList();
+  } catch (err) {
+    el.innerHTML = `<div class="page-head"><h1>Individual Accounts</h1></div><p style="color:var(--danger);padding:20px;">${err.message}</p>`;
+  }
+}
+
+function renderIndividualsList() {
+  const people = state.cache.individuals || [];
+  const getAvatar = p => (p.name || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+
+  return `
+    <div class="page-head">
+      <h1>Individual Accounts</h1>
+      <p>${people.length} personal account${people.length===1?'':'s'} — not linked to a business unless added as an employee</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 20px; padding: 14px 20px;">
+      <div class="search-bar" style="min-width:200px;"><span class="search-bar-icon">🔍</span><input class="input" id="ind-search" placeholder="Search by name or email..." oninput="filterIndividualsList()"></div>
+    </div>
+
+    <div id="ind-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+      ${people.length ? people.map(p => `
+        <div class="ind-card" data-name="${(p.name||'').toLowerCase()} ${(p.email||'').toLowerCase()}"
+          style="background:white;border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;align-items:center;gap:14px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;">${getAvatar(p)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name || '—'}</div>
+            <div style="font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.email || '—'}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">${p.phone ? '📱 '+p.phone+' · ' : ''}Joined ${new Date(p.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+          </div>
+        </div>`).join('') : `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-3);">No individual accounts yet</div>`}
+    </div>`;
+}
+
+function filterIndividualsList() {
+  const q = document.getElementById('ind-search').value.toLowerCase();
+  document.querySelectorAll('#ind-cards-grid .ind-card').forEach(card => {
+    card.style.display = card.dataset.name.includes(q) ? '' : 'none';
+  });
 }
 
 function renderShopkeepersList() {
@@ -1951,15 +2005,15 @@ function filterAllInvoices() {
     </div>
     <div class="stat-card" style="padding:12px 18px;flex:1;min-width:140px;">
       <div style="font-size:11px;color:var(--text-3);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Total Value</div>
-      <div style="font-size:20px;font-weight:800;">$${total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      <div style="font-size:20px;font-weight:800;">₹${total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
     </div>
     <div class="stat-card" style="padding:12px 18px;flex:1;min-width:140px;">
       <div style="font-size:11px;color:var(--success);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Collected</div>
-      <div style="font-size:20px;font-weight:800;color:var(--success);">$${paid.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      <div style="font-size:20px;font-weight:800;color:var(--success);">₹${paid.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
     </div>
     <div class="stat-card" style="padding:12px 18px;flex:1;min-width:140px;">
       <div style="font-size:11px;color:var(--warning);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Outstanding</div>
-      <div style="font-size:20px;font-weight:800;color:var(--warning);">$${pend.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      <div style="font-size:20px;font-weight:800;color:var(--warning);">₹${pend.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
     </div>`;
 }
 
@@ -1986,6 +2040,8 @@ async function renderAnalytics() {
     const totalInvs    = shops.reduce((a,sh) => a + (sh.total_invoices||0), 0);
     const totalProds   = shops.reduce((a,sh) => a + (sh.total_products||0), 0);
     const active       = shops.filter(sh => sh.status === 'active').length;
+    const proShops     = shops.filter(sh => sh.subscription_plan === 'Pro').length;
+    const mrr          = proShops * 999;
 
     el.innerHTML = `
       <div class="page-head">
@@ -1994,8 +2050,8 @@ async function renderAnalytics() {
       </div>
 
       <div class="stats-row" style="margin-bottom:24px;">
-        <div class="stat-card"><div class="stat-icon indigo">📈</div><div class="stat-value">₹${(totalMonthly/1000).toFixed(1)}K</div><div class="stat-label">Monthly Revenue</div></div>
-        <div class="stat-card"><div class="stat-icon green">💰</div><div class="stat-value">₹${(totalAll/1000).toFixed(1)}K</div><div class="stat-label">All-Time Revenue</div></div>
+        <div class="stat-card"><div class="stat-icon green">💎</div><div class="stat-value">₹${mrr.toLocaleString()}</div><div class="stat-label">Fynlo MRR (${proShops} on Pro)</div></div>
+        <div class="stat-card"><div class="stat-icon indigo">📈</div><div class="stat-value">₹${(totalMonthly/1000).toFixed(1)}K</div><div class="stat-label">Shops' Monthly Sales Volume</div></div>
         <div class="stat-card"><div class="stat-icon sky">🌐</div><div class="stat-value">${active}</div><div class="stat-label">Active Businesses</div></div>
         <div class="stat-card"><div class="stat-icon amber">👥</div><div class="stat-value">${totalEmps}</div><div class="stat-label">Total Employees</div></div>
         <div class="stat-card"><div class="stat-icon indigo">📄</div><div class="stat-value">${totalInvs}</div><div class="stat-label">Total Invoices</div></div>
@@ -2257,6 +2313,7 @@ function filterFeedbackAdmin(type) {
 
 const ADMIN_SECTIONS = [
   { id: 'shopkeepers',   label: 'Businesses' },
+  { id: 'individuals',   label: 'Individuals' },
   { id: 'all-products',  label: 'All Products' },
   { id: 'all-invoices',  label: 'All Invoices' },
   { id: 'analytics',     label: 'Analytics' },
@@ -3491,7 +3548,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Neon keepalive — ping immediately on load + every 4 minutes
   // This wakes Neon from cold start right away so first API call is fast
   const pingNeon = async () => {
-    if (API_BASE_URL.includes('https://fynlo-new.onrender.com/api/')) return;
+    if (API_BASE_URL.includes('YOUR-RAILWAY-URL')) return;
     try { await fetch(API_BASE_URL.replace('/api','') + '/health', { method: 'GET' }); }
     catch(e) {}
   };

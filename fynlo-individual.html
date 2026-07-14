@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <!-- Razorpay Payment Gateway -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="config.js"></script>
 <style>
 :root {
   --primary: #0F9488;
@@ -893,40 +894,27 @@ tr:hover td { background: #f8fafc; }
         <div class="auth-form-subtitle">Free to start — no shop details needed</div>
 
         <div class="form-group">
-          <label class="label">Full Name</label>
+          <label class="label">Full Name *</label>
           <input class="input" id="reg-ind-name" type="text" placeholder="Your full name">
         </div>
 
         <div class="form-group">
-          <label class="label">Email Address</label>
-          <div style="display:flex;gap:8px;">
-            <input class="input" id="reg-ind-email" type="email" placeholder="you@email.com" style="flex:1;">
-            <button class="btn btn-ghost" id="send-email-otp-btn" style="white-space:nowrap;" onclick="sendEmailOTP()">Verify</button>
-          </div>
-          <div id="email-otp-row" class="hidden" style="display:flex;gap:8px;margin-top:8px;">
-            <input class="input" id="reg-email-otp" type="text" placeholder="Enter 6-digit OTP" style="flex:1;">
-            <button class="btn btn-primary" id="verify-email-otp-btn" onclick="verifyEmailOTP()">Confirm</button>
-          </div>
+          <label class="label">Email Address *</label>
+          <input class="input" id="reg-ind-email" type="email" placeholder="you@email.com">
         </div>
 
         <div class="form-group">
           <label class="label">Phone Number <span style="color:var(--text-3);font-weight:400;">(optional)</span></label>
-          <div style="display:flex;gap:8px;">
-            <input class="input" id="reg-ind-phone" type="tel" placeholder="10-digit mobile number" style="flex:1;">
-            <button class="btn btn-ghost" id="send-phone-otp-btn" style="white-space:nowrap;" onclick="sendPhoneOTP()">Verify</button>
-          </div>
-          <div id="phone-otp-row" class="hidden" style="display:flex;gap:8px;margin-top:8px;">
-            <input class="input" id="reg-phone-otp" type="text" placeholder="Enter 6-digit OTP" style="flex:1;">
-            <button class="btn btn-primary" id="verify-phone-otp-btn" onclick="verifyPhoneOTP()">Confirm</button>
-          </div>
+          <input class="input" id="reg-ind-phone" type="tel" placeholder="10-digit mobile number">
         </div>
 
         <div class="form-group">
-          <label class="label">Password</label>
+          <label class="label">Password *</label>
           <input class="input" id="reg-ind-password" type="password" placeholder="At least 6 characters">
         </div>
 
         <button class="btn btn-primary w-full" style="margin-top: 8px;" onclick="handleRegister()">Create Free Account →</button>
+        <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-3);">You can verify your email and phone anytime from Account Settings after signing in.</div>
 
         <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--text-3);">
           Already have an account? <a onclick="setAuthTab('login')" style="color:var(--primary);font-weight:700;cursor:pointer;">Sign in</a>
@@ -973,20 +961,20 @@ tr:hover td { background: #f8fafc; }
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
-        <div class="card" style="text-align:center;padding:24px 16px;opacity:0.6;">
+        <div class="card" style="text-align:center;padding:24px 16px;cursor:pointer;" onclick="openExpensesModal()">
           <div style="font-size:28px;margin-bottom:8px;">💸</div>
           <div style="font-weight:700;font-size:14px;margin-bottom:4px;">Expenses</div>
-          <div style="font-size:12px;color:var(--text-3);">Coming soon</div>
+          <div style="font-size:12px;color:var(--text-3);" id="expenses-tile-summary">Tap to track spending</div>
         </div>
-        <div class="card" style="text-align:center;padding:24px 16px;opacity:0.6;">
+        <div class="card" style="text-align:center;padding:24px 16px;cursor:pointer;" onclick="openQuickInvoiceModal()">
           <div style="font-size:28px;margin-bottom:8px;">🧾</div>
           <div style="font-weight:700;font-size:14px;margin-bottom:4px;">Quick Invoices</div>
-          <div style="font-size:12px;color:var(--text-3);">Coming soon</div>
+          <div style="font-size:12px;color:var(--text-3);" id="invoices-tile-summary">Tap to bill a client</div>
         </div>
-        <div class="card" style="text-align:center;padding:24px 16px;opacity:0.6;">
+        <div class="card" style="text-align:center;padding:24px 16px;cursor:pointer;" onclick="openTodosModal()">
           <div style="font-size:28px;margin-bottom:8px;">✅</div>
           <div style="font-weight:700;font-size:14px;margin-bottom:4px;">To‑dos</div>
-          <div style="font-size:12px;color:var(--text-3);">Coming soon</div>
+          <div style="font-size:12px;color:var(--text-3);" id="todos-tile-summary">Tap to add a task</div>
         </div>
       </div>
 
@@ -1022,6 +1010,33 @@ tr:hover td { background: #f8fafc; }
     <div class="form-group"><label class="label">Name</label><input class="input" id="acct-name" disabled></div>
     <div class="form-group"><label class="label">Email</label><input class="input" id="acct-email" disabled></div>
   </div>
+
+  <div style="font-size:11px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin:18px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Verify Contact Info</div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
+    <div>
+      <div style="font-size:13px;font-weight:600;">Email</div>
+      <div id="acct-email-status" style="font-size:11px;color:var(--text-3);"></div>
+    </div>
+    <button class="btn btn-sm btn-ghost" id="acct-email-verify-btn" onclick="sendVerifyCode('email')">Send code</button>
+  </div>
+  <div id="acct-email-code-row" class="hidden" style="display:flex;gap:8px;margin-bottom:8px;">
+    <input class="input" id="acct-email-code" placeholder="Enter code" style="flex:1;">
+    <button class="btn btn-sm btn-primary" onclick="confirmVerifyCode('email')">Confirm</button>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
+    <div>
+      <div style="font-size:13px;font-weight:600;">Phone</div>
+      <div id="acct-phone-status" style="font-size:11px;color:var(--text-3);"></div>
+    </div>
+    <button class="btn btn-sm btn-ghost" id="acct-phone-verify-btn" onclick="sendVerifyCode('phone')">Send code</button>
+  </div>
+  <div id="acct-phone-code-row" class="hidden" style="display:flex;gap:8px;margin-bottom:8px;">
+    <input class="input" id="acct-phone-code" placeholder="Enter code" style="flex:1;">
+    <button class="btn btn-sm btn-primary" onclick="confirmVerifyCode('phone')">Confirm</button>
+  </div>
+
   <div style="font-size:11px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin:18px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);">Reset Password</div>
   <div class="form-group"><label class="label">Current Password</label><input class="input" id="pwd-current" type="password" placeholder="••••••••"></div>
   <div class="form-row cols-2">
@@ -1031,12 +1046,69 @@ tr:hover td { background: #f8fafc; }
   <button class="btn btn-primary w-full" onclick="resetPassword()">Update Password</button>
 </div></div>
 
+<div id="modal-expenses" class="modal-bg"><div class="modal wide">
+  <div class="modal-hdr"><h2>💸 Expenses</h2><button class="modal-close" onclick="closeModal('expenses')">×</button></div>
+
+  <div style="border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="label">Category</label>
+        <select class="select" id="exp-category">
+          <option>Food</option><option>Transport</option><option>Bills</option>
+          <option>Shopping</option><option>Health</option><option>Entertainment</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="label">Amount (₹)</label><input class="input" id="exp-amount" type="number" placeholder="0"></div>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="label">Date</label><input class="input" id="exp-date" type="date"></div>
+      <div class="form-group"><label class="label">Note <span style="color:var(--text-3);font-weight:400;">(optional)</span></label><input class="input" id="exp-description" placeholder="What was this for?"></div>
+    </div>
+    <button class="btn btn-primary" onclick="addPersonalExpense()">+ Add Expense</button>
+  </div>
+
+  <div style="font-weight:700;font-size:14px;margin-bottom:10px;">Total this month: <span id="exp-total" style="color:var(--primary);">₹0</span></div>
+  <div id="exp-list" style="max-height:320px;overflow-y:auto;"></div>
+</div></div>
+
+<div id="modal-todos" class="modal-bg"><div class="modal">
+  <div class="modal-hdr"><h2>✅ To‑dos</h2><button class="modal-close" onclick="closeModal('todos')">×</button></div>
+  <div style="display:flex;gap:8px;margin-bottom:16px;">
+    <input class="input" id="todo-input" placeholder="Add a task..." style="flex:1;" onkeydown="if(event.key==='Enter')addPersonalTodo();">
+    <button class="btn btn-primary" onclick="addPersonalTodo()">Add</button>
+  </div>
+  <div id="todo-list"></div>
+</div></div>
+
+<div id="modal-quick-invoice" class="modal-bg"><div class="modal wide">
+  <div class="modal-hdr"><h2>🧾 Quick Invoice</h2><button class="modal-close" onclick="closeModal('quick-invoice')">×</button></div>
+
+  <div style="border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="label">Client Name *</label><input class="input" id="pi-client-name" placeholder="Client or company name"></div>
+      <div class="form-group"><label class="label">Client Email <span style="color:var(--text-3);font-weight:400;">(optional)</span></label><input class="input" id="pi-client-email" type="email" placeholder="client@email.com"></div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px;">
+      <strong style="font-size:13px;">Items</strong>
+      <button class="btn btn-sm btn-ghost" onclick="addQuickInvoiceRow()">+ Add Item</button>
+    </div>
+    <div id="pi-items-container"></div>
+    <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;display:flex;justify-content:flex-end;">
+      <div style="font-size:16px;font-weight:800;">Total: <strong id="pi-total" style="color:var(--primary);">₹0.00</strong></div>
+    </div>
+    <button class="btn btn-primary w-full" style="margin-top:12px;" onclick="savePersonalInvoice()">🖨️ Create &amp; Print Invoice</button>
+  </div>
+
+  <div style="font-weight:700;font-size:14px;margin-bottom:10px;">Your Invoices</div>
+  <div id="pi-list" style="max-height:280px;overflow-y:auto;"></div>
+</div></div>
+
 <div class="toast-container" id="toast-container"></div>
 
 <script>
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000/api'
-  : 'https://fynlo-new.onrender.com/api/';
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? FYNLO_CONFIG.LOCAL_API_URL
+  : FYNLO_CONFIG.PRODUCTION_API_URL) + '/api';
 
 const Auth = {
   getToken : ()  => localStorage.getItem('fynlo_token'),
@@ -1100,61 +1172,6 @@ function setAuthTab(tab) {
   }
 }
 
-const OTPState = {
-  emailVerified: false,
-  phoneVerified: false,
-  emailOTP: null,
-  phoneOTP: null,
-};
-
-function generateOTP() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-function sendEmailOTP() {
-  const email = document.getElementById('reg-ind-email').value.trim();
-  if (!email || !email.includes('@')) { showToast('Enter a valid email first', 'error'); return; }
-  OTPState.emailOTP = generateOTP();
-  OTPState.emailVerified = false;
-  document.getElementById('email-otp-row').classList.remove('hidden');
-  document.getElementById('send-email-otp-btn').textContent = 'Resend';
-  showToast('Email OTP: ' + OTPState.emailOTP + ' (demo — add email service for production)', 'info');
-  console.log('Email OTP (dev only):', OTPState.emailOTP);
-}
-
-function verifyEmailOTP() {
-  const entered = document.getElementById('reg-email-otp').value.trim();
-  if (entered === OTPState.emailOTP) {
-    OTPState.emailVerified = true;
-    const btn = document.getElementById('verify-email-otp-btn');
-    btn.textContent = '✓ Verified'; btn.style.background = '#10b981'; btn.style.color = 'white';
-    document.getElementById('reg-email-otp').disabled = true;
-    showToast('Email verified! ✅', 'success');
-  } else { showToast('Incorrect OTP. Try again.', 'error'); }
-}
-
-function sendPhoneOTP() {
-  const phone = document.getElementById('reg-ind-phone').value.trim();
-  if (!phone || phone.length < 8) { showToast('Enter a valid phone number first', 'error'); return; }
-  OTPState.phoneOTP = generateOTP();
-  OTPState.phoneVerified = false;
-  document.getElementById('phone-otp-row').classList.remove('hidden');
-  document.getElementById('send-phone-otp-btn').textContent = 'Resend';
-  showToast('Phone OTP: ' + OTPState.phoneOTP + ' (demo — add Twilio/MSG91 for production)', 'info');
-  console.log('Phone OTP (dev only):', OTPState.phoneOTP);
-}
-
-function verifyPhoneOTP() {
-  const entered = document.getElementById('reg-phone-otp').value.trim();
-  if (entered === OTPState.phoneOTP) {
-    OTPState.phoneVerified = true;
-    const btn = document.getElementById('verify-phone-otp-btn');
-    btn.textContent = '✓ Verified'; btn.style.background = '#10b981'; btn.style.color = 'white';
-    document.getElementById('reg-phone-otp').disabled = true;
-    showToast('Phone verified! ✅', 'success');
-  } else { showToast('Incorrect OTP. Try again.', 'error'); }
-}
-
 async function handleRegister() {
   const name  = document.getElementById('reg-ind-name').value.trim();
   const email = document.getElementById('reg-ind-email').value.trim();
@@ -1163,7 +1180,15 @@ async function handleRegister() {
 
   if (!name || !email || !pass) { showToast('Please fill in your name, email and password', 'error'); return; }
   if (pass.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
-  if (!OTPState.emailVerified) { showToast('Please verify your email first', 'error'); return; }
+
+  const emailFormatOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!emailFormatOk) { showToast('Please enter a valid email address', 'error'); return; }
+
+  if (phone) {
+    const phoneDigits = phone.replace(/[^0-9]/g, '');
+    const phoneFormatOk = phoneDigits.length >= 10 && phoneDigits.length <= 13;
+    if (!phoneFormatOk) { showToast('Please enter a valid phone number', 'error'); return; }
+  }
 
   const btn = document.querySelector('#register-form .btn-primary');
   if (btn) { btn.textContent = 'Creating account...'; btn.disabled = true; }
@@ -1175,8 +1200,6 @@ async function handleRegister() {
     if (!data) return;
     Auth.setToken(data.token);
     Auth.setUser(data.user);
-    OTPState.emailVerified = false;
-    OTPState.phoneVerified = false;
     showToast('Welcome to Fynlo! 🎉 Your account is ready.', 'success');
     setTimeout(() => loginSuccess(data.user), 500);
   } catch (err) {
@@ -1221,6 +1244,9 @@ function loginSuccess(user) {
   document.getElementById('app-root').style.display = 'flex';
   document.getElementById('user-chip-name').textContent = user.name;
   document.getElementById('welcome-name').textContent = user.name.split(' ')[0];
+  updateExpensesTileSummary();
+  updateTodosTileSummary();
+  updateInvoicesTileSummary();
 }
 
 function logout() {
@@ -1329,14 +1355,71 @@ async function submitPunchToken(token) {
 }
 
 /* ===== Account Settings / Password Reset ===== */
-function openAccountSettings() {
+async function openAccountSettings() {
   const u = state.currentUser || {};
   document.getElementById('acct-name').value = u.name || '';
   document.getElementById('acct-email').value = u.email || '';
   document.getElementById('pwd-current').value = '';
   document.getElementById('pwd-new').value = '';
   document.getElementById('pwd-confirm').value = '';
+  document.getElementById('acct-email-code-row').classList.add('hidden');
+  document.getElementById('acct-phone-code-row').classList.add('hidden');
   openModal('account-settings');
+
+  try {
+    const data = await GET('/profile');
+    const profileUser = data.user || {};
+    renderVerifyStatus('email', profileUser.email_verified);
+    renderVerifyStatus('phone', profileUser.phone_verified);
+  } catch (err) {
+    document.getElementById('acct-email-status').textContent = 'Could not load status';
+  }
+}
+
+function renderVerifyStatus(type, verified) {
+  const statusEl = document.getElementById(`acct-${type}-status`);
+  const btnEl = document.getElementById(`acct-${type}-verify-btn`);
+  if (!statusEl || !btnEl) return;
+  if (verified) {
+    statusEl.innerHTML = '<span style="color:#10b981;font-weight:700;">✓ Verified</span>';
+    btnEl.style.display = 'none';
+  } else {
+    statusEl.innerHTML = '<span style="color:var(--text-3);">Not verified</span>';
+    btnEl.style.display = '';
+    btnEl.textContent = 'Send code';
+  }
+}
+
+async function sendVerifyCode(type) {
+  if (type === 'phone' && !state.currentUser?.phone) {
+    showToast('Add a phone number to your account first', 'error');
+    return;
+  }
+  const btn = document.getElementById(`acct-${type}-verify-btn`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+  try {
+    const res = await POST('/auth/send-verify-code', { type });
+    document.getElementById(`acct-${type}-code-row`).classList.remove('hidden');
+    showToast(`Demo code: ${res.demoCode} (no email/SMS service connected yet)`, 'info');
+  } catch (err) {
+    showToast(err.message || 'Could not send code', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Resend code'; }
+  }
+}
+
+async function confirmVerifyCode(type) {
+  const code = document.getElementById(`acct-${type}-code`).value.trim();
+  if (!code) { showToast('Enter the code first', 'error'); return; }
+  try {
+    await POST('/auth/confirm-verify-code', { type, code });
+    document.getElementById(`acct-${type}-code-row`).classList.add('hidden');
+    document.getElementById(`acct-${type}-code`).value = '';
+    renderVerifyStatus(type, true);
+    showToast(`${type === 'email' ? 'Email' : 'Phone'} verified ✓`, 'success');
+  } catch (err) {
+    showToast(err.message || 'Incorrect code', 'error');
+  }
 }
 
 async function resetPassword() {
@@ -1355,6 +1438,297 @@ async function resetPassword() {
   } catch (err) {
     showToast(err.message || 'Failed to update password', 'error');
   }
+}
+
+/* ===== Personal Expenses ===== */
+async function openExpensesModal() {
+  document.getElementById('exp-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-description').value = '';
+  openModal('expenses');
+  await loadPersonalExpenses();
+}
+
+async function loadPersonalExpenses() {
+  const listEl = document.getElementById('exp-list');
+  listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);">Loading...</div>';
+  try {
+    const expenses = await GET('/personal-expenses');
+    state.cache.expenses = expenses;
+    renderExpensesList();
+    updateExpensesTileSummary();
+  } catch (err) {
+    listEl.innerHTML = `<div style="color:var(--danger);padding:20px;">${err.message}</div>`;
+  }
+}
+
+function renderExpensesList() {
+  const expenses = state.cache.expenses || [];
+  const listEl = document.getElementById('exp-list');
+  const thisMonth = new Date().toISOString().slice(0,7);
+  const monthTotal = expenses.filter(e => (e.expense_date||'').slice(0,7) === thisMonth)
+    .reduce((a,e) => a + parseFloat(e.amount||0), 0);
+  document.getElementById('exp-total').textContent = '₹' + monthTotal.toFixed(2);
+
+  listEl.innerHTML = expenses.length ? expenses.map(e => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-weight:600;font-size:13px;">${e.category}${e.description ? ' — ' + e.description : ''}</div>
+        <div style="font-size:11px;color:var(--text-3);">${e.expense_date}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-weight:700;color:var(--danger);">₹${parseFloat(e.amount).toFixed(2)}</div>
+        <button style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:15px;" onclick="deletePersonalExpense(${e.id})">🗑️</button>
+      </div>
+    </div>`).join('') : '<div style="text-align:center;padding:30px;color:var(--text-3);">No expenses logged yet</div>';
+}
+
+async function addPersonalExpense() {
+  const category = document.getElementById('exp-category').value;
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  if (!amount || amount <= 0) { showToast('Enter a valid amount', 'error'); return; }
+  try {
+    await POST('/personal-expenses', {
+      category, amount,
+      description: document.getElementById('exp-description').value || null,
+      expense_date: document.getElementById('exp-date').value,
+    });
+    document.getElementById('exp-amount').value = '';
+    document.getElementById('exp-description').value = '';
+    showToast('Expense added ✓', 'success');
+    await loadPersonalExpenses();
+  } catch (err) {
+    showToast(err.message || 'Failed to add expense', 'error');
+  }
+}
+
+async function deletePersonalExpense(id) {
+  try {
+    await DEL(`/personal-expenses/${id}`);
+    await loadPersonalExpenses();
+  } catch (err) {
+    showToast(err.message || 'Failed to delete', 'error');
+  }
+}
+
+async function updateExpensesTileSummary() {
+  try {
+    const expenses = state.cache.expenses || await GET('/personal-expenses');
+    const thisMonth = new Date().toISOString().slice(0,7);
+    const total = expenses.filter(e => (e.expense_date||'').slice(0,7) === thisMonth)
+      .reduce((a,e) => a + parseFloat(e.amount||0), 0);
+    const el = document.getElementById('expenses-tile-summary');
+    if (el) el.textContent = total > 0 ? `₹${total.toFixed(0)} this month` : 'Tap to track spending';
+  } catch (err) {}
+}
+
+/* ===== Personal Quick Invoices ===== */
+async function openQuickInvoiceModal() {
+  document.getElementById('pi-client-name').value = '';
+  document.getElementById('pi-client-email').value = '';
+  document.getElementById('pi-items-container').innerHTML = '';
+  document.getElementById('pi-total').textContent = '₹0.00';
+  addQuickInvoiceRow();
+  openModal('quick-invoice');
+  await loadPersonalInvoices();
+}
+
+function addQuickInvoiceRow(name = '', amount = '') {
+  const container = document.getElementById('pi-items-container');
+  const row = document.createElement('div');
+  row.className = 'pi-row';
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 28px;gap:6px;align-items:center;margin-bottom:8px;';
+  row.innerHTML = `
+    <input class="input pi-name" placeholder="Item or service" value="${name}">
+    <input class="input pi-amount" type="number" placeholder="Amount" value="${amount}" oninput="calcQuickInvoiceTotal()">
+    <button style="background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer;" onclick="this.closest('.pi-row').remove();calcQuickInvoiceTotal()">×</button>`;
+  container.appendChild(row);
+  calcQuickInvoiceTotal();
+}
+
+function calcQuickInvoiceTotal() {
+  let total = 0;
+  document.querySelectorAll('#pi-items-container .pi-row').forEach(row => {
+    total += parseFloat(row.querySelector('.pi-amount').value) || 0;
+  });
+  document.getElementById('pi-total').textContent = '₹' + total.toFixed(2);
+}
+
+async function savePersonalInvoice() {
+  const clientName = document.getElementById('pi-client-name').value.trim();
+  if (!clientName) { showToast('Client name is required', 'error'); return; }
+
+  const items = [];
+  document.querySelectorAll('#pi-items-container .pi-row').forEach(row => {
+    const name = row.querySelector('.pi-name').value.trim();
+    const amount = parseFloat(row.querySelector('.pi-amount').value) || 0;
+    if (name && amount) items.push({ name, amount });
+  });
+  if (!items.length) { showToast('Add at least one item', 'error'); return; }
+
+  try {
+    const inv = await POST('/personal-invoices', {
+      client_name: clientName,
+      client_email: document.getElementById('pi-client-email').value || null,
+      items,
+    });
+    showToast(`Invoice ${inv.invoice_number} created ✓`, 'success');
+    printPersonalInvoice(inv);
+    await loadPersonalInvoices();
+    updateInvoicesTileSummary();
+  } catch (err) {
+    showToast(err.message || 'Failed to create invoice', 'error');
+  }
+}
+
+async function loadPersonalInvoices() {
+  const listEl = document.getElementById('pi-list');
+  listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);">Loading...</div>';
+  try {
+    const invoices = await GET('/personal-invoices');
+    state.cache.personalInvoices = invoices;
+    listEl.innerHTML = invoices.length ? invoices.map(inv => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-weight:600;font-size:13px;">${inv.invoice_number} — ${inv.client_name}</div>
+          <div style="font-size:11px;color:var(--text-3);">${inv.invoice_date} · <span style="color:${inv.status==='paid'?'#10b981':'var(--warning)'};font-weight:600;">${inv.status}</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-weight:700;">₹${parseFloat(inv.total_amount).toFixed(2)}</div>
+          ${inv.status !== 'paid' ? `<button class="btn btn-sm btn-ghost" onclick="markPersonalInvoicePaid(${inv.id})">Mark Paid</button>` : ''}
+          <button style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:15px;" onclick="printPersonalInvoice(${JSON.stringify(inv).replace(/"/g,'&quot;')})">🖨️</button>
+          <button style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:15px;" onclick="deletePersonalInvoice(${inv.id})">🗑️</button>
+        </div>
+      </div>`).join('') : '<div style="text-align:center;padding:30px;color:var(--text-3);">No invoices yet</div>';
+  } catch (err) {
+    listEl.innerHTML = `<div style="color:var(--danger);padding:20px;">${err.message}</div>`;
+  }
+}
+
+async function markPersonalInvoicePaid(id) {
+  try {
+    await PATCH(`/personal-invoices/${id}`, { status: 'paid' });
+    showToast('Marked as paid ✓', 'success');
+    await loadPersonalInvoices();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deletePersonalInvoice(id) {
+  try {
+    await DEL(`/personal-invoices/${id}`);
+    await loadPersonalInvoices();
+    updateInvoicesTileSummary();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function updateInvoicesTileSummary() {
+  try {
+    const invoices = state.cache.personalInvoices || await GET('/personal-invoices');
+    const unpaid = invoices.filter(i => i.status !== 'paid').length;
+    const el = document.getElementById('invoices-tile-summary');
+    if (el) el.textContent = unpaid > 0 ? `${unpaid} unpaid` : 'Tap to bill a client';
+  } catch (err) {}
+}
+
+function printPersonalInvoice(inv) {
+  const u = state.currentUser || {};
+  const items = typeof inv.items === 'string' ? JSON.parse(inv.items) : inv.items;
+  const rows = items.map(i => `
+    <tr><td style="padding:6px 0;">${i.name}</td><td style="padding:6px 0;text-align:right;">₹${parseFloat(i.amount).toFixed(2)}</td></tr>`).join('');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><title>Invoice ${inv.invoice_number}</title>
+    <style>
+      body { font-family: monospace; font-size: 13px; color: #111; padding: 24px; max-width: 380px; margin: 0 auto; }
+      h1 { font-size: 16px; text-align: center; margin-bottom: 4px; }
+      .sub { text-align: center; font-size: 11px; color: #555; margin-bottom: 16px; }
+      table { width: 100%; border-collapse: collapse; }
+      .total-row { border-top: 1px solid #333; font-weight: bold; }
+      .thanks { text-align: center; margin-top: 20px; font-size: 12px; }
+    </style>
+    </head><body>
+      <h1>${u.name || 'Invoice'}</h1>
+      <div class="sub">Invoice ${inv.invoice_number} · ${inv.invoice_date}<br>Bill to: ${inv.client_name}</div>
+      <table>
+        <tbody>${rows}</tbody>
+        <tfoot><tr class="total-row"><td style="padding-top:8px;">Total</td><td style="text-align:right;padding-top:8px;">₹${parseFloat(inv.total_amount).toFixed(2)}</td></tr></tfoot>
+      </table>
+      <div class="thanks">Thank you! 🙏</div>
+    </body></html>`);
+  win.document.close();
+  win.focus();
+  win.print();
+}
+
+/* ===== Personal To-dos ===== */
+async function openTodosModal() {
+  document.getElementById('todo-input').value = '';
+  openModal('todos');
+  await loadPersonalTodos();
+}
+
+async function loadPersonalTodos() {
+  const listEl = document.getElementById('todo-list');
+  listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);">Loading...</div>';
+  try {
+    const todos = await GET('/personal-todos');
+    state.cache.todos = todos;
+    renderTodosList();
+    updateTodosTileSummary();
+  } catch (err) {
+    listEl.innerHTML = `<div style="color:var(--danger);padding:20px;">${err.message}</div>`;
+  }
+}
+
+function renderTodosList() {
+  const todos = state.cache.todos || [];
+  const listEl = document.getElementById('todo-list');
+  listEl.innerHTML = todos.length ? todos.map(t => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <input type="checkbox" ${t.is_done?'checked':''} style="width:18px;height:18px;flex-shrink:0;" onchange="togglePersonalTodo(${t.id}, this.checked)">
+      <div style="flex:1;font-size:13px;${t.is_done ? 'text-decoration:line-through;color:var(--text-3);' : ''}">${t.title}</div>
+      <button style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:15px;" onclick="deletePersonalTodo(${t.id})">🗑️</button>
+    </div>`).join('') : '<div style="text-align:center;padding:30px;color:var(--text-3);">No tasks yet</div>';
+}
+
+async function addPersonalTodo() {
+  const input = document.getElementById('todo-input');
+  const title = input.value.trim();
+  if (!title) return;
+  try {
+    await POST('/personal-todos', { title });
+    input.value = '';
+    await loadPersonalTodos();
+  } catch (err) {
+    showToast(err.message || 'Failed to add task', 'error');
+  }
+}
+
+async function togglePersonalTodo(id, isDone) {
+  try {
+    await PATCH(`/personal-todos/${id}`, { is_done: isDone });
+    await loadPersonalTodos();
+  } catch (err) {
+    showToast(err.message || 'Failed to update task', 'error');
+  }
+}
+
+async function deletePersonalTodo(id) {
+  try {
+    await DEL(`/personal-todos/${id}`);
+    await loadPersonalTodos();
+  } catch (err) {
+    showToast(err.message || 'Failed to delete', 'error');
+  }
+}
+
+async function updateTodosTileSummary() {
+  try {
+    const todos = state.cache.todos || await GET('/personal-todos');
+    const pending = todos.filter(t => !t.is_done).length;
+    const el = document.getElementById('todos-tile-summary');
+    if (el) el.textContent = pending > 0 ? `${pending} task${pending===1?'':'s'} pending` : 'All caught up ✓';
+  } catch (err) {}
 }
 
 function showToast(msg, type = 'info') {

@@ -869,8 +869,8 @@ tr:hover td { background: #f8fafc; }
         <div style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);border:1.5px solid #6ee7b7;border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
           <span style="font-size:22px;">🎁</span>
           <div>
-            <div style="font-weight:800;font-size:13px;color:#065f46;">Free Forever Plan — Included!</div>
-            <div style="font-size:11px;color:#047857;margin-top:2px;">50 products · 3 employees · 20 invoices/month · No credit card needed</div>
+            <div style="font-weight:800;font-size:13px;color:#065f46;">Free Plan — Included!</div>
+            <div style="font-size:11px;color:#047857;margin-top:2px;">10 products · 2 employees · 10 invoices/month · No credit card needed</div>
           </div>
         </div>
 
@@ -1400,7 +1400,7 @@ const DEL   = (url)       => api(url, { method: 'DELETE' });
 
 async function api(endpoint, options = {}) {
   // Check if URL is still placeholder
-  if (API_BASE_URL.includes('https://fynlo-new.onrender.com/api/')) {
+  if (API_BASE_URL.includes('YOUR-RAILWAY-URL')) {
     showToast('⚠️ Please set your Railway URL in saas.html', 'error');
     throw new Error('Railway URL not configured');
   }
@@ -2124,7 +2124,7 @@ function renderPricingPage() {
             <span style="font-size:48px;font-weight:900;line-height:1;">₹${p.price}</span>
             <span style="opacity:0.7;margin-bottom:8px;">/month</span>
           </div>
-          <div style="margin-top:6px;font-size:12px;opacity:0.7;">${p.price === 0 ? 'Free forever' : 'Billed monthly · cancel anytime'}</div>
+          <div style="margin-top:6px;font-size:12px;opacity:0.7;">${p.price === 0 ? 'No cost, no card required' : 'Billed monthly · cancel anytime'}</div>
         </div>
 
         <!-- Features -->
@@ -4497,7 +4497,7 @@ function renderSubscriptionBilling() {
             <div style="font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Current Plan</div>
             <div style="font-size:24px;font-weight:800;margin-bottom:4px;">${plan}</div>
             <div style="font-size:13px;opacity:0.8;">
-              ${price === 0 ? 'Free forever' : `₹${price}/month · Next billing: ${subBillingState.nextBillingDate}`}
+              ${price === 0 ? 'No cost, no card required' : `₹${price}/month · Next billing: ${subBillingState.nextBillingDate}`}
             </div>
           </div>
           <div style="text-align:right;">
