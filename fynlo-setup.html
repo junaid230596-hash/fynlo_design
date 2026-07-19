@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fynlo — First-Time Setup</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style>
+  :root {
+    --primary: #0F9488;
+    --primary-dark: #0B7A70;
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --danger: #dc2626;
+    --success: #059669;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(15,23,42,0.06), 0 1px 4px rgba(15,23,42,0.04);
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .brand { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .brand img { height: 30px; width: auto; }
+  .brand span { color: var(--primary); }
+  .subtitle { text-align: center; font-size: 13px; color: var(--text-3); margin-bottom: 28px; }
+  .warning {
+    background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;
+    padding: 12px 14px; font-size: 12px; color: #92400e; line-height: 1.6; margin-bottom: 24px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .label { display: block; font-size: 12px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+  .input {
+    width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: inherit; color: var(--text); background: var(--surface);
+    transition: border-color .15s ease;
+  }
+  .input:focus { outline: none; border-color: var(--primary); }
+  .btn {
+    width: 100%; min-height: 46px; border: none; border-radius: 10px;
+    background: var(--primary); color: white; font-weight: 700; font-size: 14px;
+    cursor: pointer; margin-top: 8px; transition: background .15s ease;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .msg { font-size: 13px; padding: 12px 14px; border-radius: 10px; margin-top: 16px; line-height: 1.6; display: none; }
+  .msg.show { display: block; }
+  .msg.error { background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); }
+  .msg.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: var(--success); }
+  .msg a { color: inherit; font-weight: 700; text-decoration: underline; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="brand"><img src="icons/logo-mark.png" alt="Fynlo">fynl<span>o</span></div>
+  <div class="subtitle">First-time setup — create your admin account</div>
+
+  <div class="warning">
+    ⚠️ This only works once, on a completely empty database. If an admin account already exists, this will refuse to run. You'll need the <strong>Admin Bootstrap Secret</strong> set on your server (the <code>ADMIN_BOOTSTRAP_SECRET</code> environment variable).
+  </div>
+
+  <div id="setup-form">
+    <div class="form-group">
+      <label class="label">Bootstrap Secret</label>
+      <input class="input" id="secret" type="password" placeholder="From your server's environment variables">
+    </div>
+    <div class="form-group">
+      <label class="label">Your Full Name</label>
+      <input class="input" id="name" type="text" placeholder="Jane Doe">
+    </div>
+    <div class="form-group">
+      <label class="label">Email</label>
+      <input class="input" id="email" type="email" placeholder="admin@yourcompany.com">
+    </div>
+    <div class="form-group">
+      <label class="label">Password</label>
+      <input class="input" id="password" type="password" placeholder="At least 6 characters">
+    </div>
+    <div class="form-group">
+      <label class="label">Confirm Password</label>
+      <input class="input" id="confirmPassword" type="password" placeholder="Re-enter password">
+    </div>
+    <button class="btn" id="submitBtn" onclick="createFirstAdmin()">Create Admin Account →</button>
+  </div>
+
+  <div id="msg" class="msg"></div>
+</div>
+
+<script>
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? FYNLO_CONFIG.LOCAL_API_URL
+  : FYNLO_CONFIG.PRODUCTION_API_URL) + '/api';
+
+function showMsg(text, type) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.className = 'msg show ' + type;
+}
+
+async function createFirstAdmin() {
+  const secret = document.getElementById('secret').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+
+  if (!secret || !name || !email || !password) {
+    showMsg('Please fill in every field.', 'error');
+    return;
+  }
+  if (password.length < 6) {
+    showMsg('Password must be at least 6 characters.', 'error');
+    return;
+  }
+  if (password !== confirmPassword) {
+    showMsg('Passwords do not match.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Creating account...';
+
+  try {
+    const res = await fetch(API_BASE_URL + '/admin/bootstrap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret, name, email, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      showMsg(data.error || 'Something went wrong.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Create Admin Account →';
+      return;
+    }
+
+    document.getElementById('setup-form').classList.add('hidden');
+    showMsg('✅ Admin account created! You can now sign in from the admin dashboard.', 'success');
+    setTimeout(() => {
+      const link = document.createElement('div');
+      link.style.marginTop = '12px';
+      link.innerHTML = '<a href="fynlo-admin.html">Go to Admin Sign In →</a>';
+      document.getElementById('msg').appendChild(link);
+    }, 100);
+  } catch (err) {
+    showMsg('Could not reach the server. Check your connection and try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Create Admin Account →';
+  }
+}
+</script>
+
+</body>
+</html>
