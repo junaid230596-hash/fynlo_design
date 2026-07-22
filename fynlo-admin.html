@@ -881,6 +881,8 @@ tr:hover td { background: #f8fafc; }
         &nbsp;·&nbsp;
         <a href="fynlo-individual.html" style="color:var(--primary);font-weight:700;">Individual Sign In</a>
       </div>
+
+      <button class="btn btn-ghost w-full pwa-install-btn hidden" style="margin-top:14px;" onclick="triggerPwaInstall()">📲 Install Admin App</button>
     </div>
   </div>
 </div>
@@ -3065,6 +3067,7 @@ function renderSettings() {
         <div class="form-group"><label class="label">Email</label><input class="input" type="email" value="${u.email}"></div>
         <div class="form-group"><label class="label">Company</label><input class="input" value="${u.company || ''}"></div>
         <button class="btn btn-primary btn-sm" onclick="showToast('Profile saved!','success')">Save Changes</button>
+        <button class="btn btn-ghost btn-sm pwa-install-btn hidden" style="margin-top:8px;" onclick="triggerPwaInstall()">📲 Install Admin App</button>
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title">💳 Platform Billing</span></div>
@@ -3200,7 +3203,7 @@ async function confirmUpgrade(planId) {
     });
 
     // Step 2 — open Razorpay checkout
-    const rzpKey = window.RAZORPAY_KEY_ID || 'rzp_test_xxxx';
+    const rzpKey = RAZORPAY_KEY_ID;
     const rzp = new Razorpay({
       key          : rzpKey,
       amount       : order.amount,
@@ -3952,6 +3955,25 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw-admin.js', { scope: './fynlo-admin.html' }).catch((err) => console.warn('SW registration failed:', err));
   });
 }
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.remove('hidden'));
+});
+
+async function triggerPwaInstall() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.add('hidden'));
+}
+
+window.addEventListener('appinstalled', () => {
+  document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.add('hidden'));
+});
 </script>
 
 </body>

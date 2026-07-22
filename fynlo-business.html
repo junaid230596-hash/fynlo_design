@@ -940,6 +940,16 @@ tr:hover td { background: #f8fafc; }
 <!-- ══════════════════════════════════════════════════
      APP ROOT
 ══════════════════════════════════════════════════ -->
+<div id="subscription-lock-screen" class="hidden" style="position:fixed;inset:0;z-index:5000;background:rgba(15,27,38,0.92);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:white;border-radius:20px;max-width:420px;width:100%;padding:36px 32px;text-align:center;">
+    <div style="font-size:44px;margin-bottom:16px;">🔒</div>
+    <div style="font-size:19px;font-weight:800;margin-bottom:10px;color:var(--text);">Your Pro subscription has expired</div>
+    <div id="lock-screen-message" style="font-size:14px;color:var(--text-2);line-height:1.6;margin-bottom:24px;">Renew your subscription to continue using Fynlo.</div>
+    <button class="btn btn-primary w-full" style="margin-bottom:10px;" onclick="renewFromLockScreen()">💎 Renew Pro — ₹999/month</button>
+    <button class="btn btn-ghost w-full" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
 <div id="app-root">
   <!-- TOPBAR -->
   <nav class="topbar">
@@ -1417,6 +1427,10 @@ async function api(endpoint, options = {}) {
     });
     const data = await res.json().catch(() => ({}));
     if (res.status === 401) { logout(); return null; }
+    if (res.status === 402 && data.error === 'subscription_expired') {
+      showSubscriptionLockScreen(data.message);
+      return null;
+    }
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     return data;
   } catch (err) {
@@ -3544,6 +3558,56 @@ async function saveProfile() {
   } finally { btnDone(btn); }
 }
 
+function showSubscriptionLockScreen(message) {
+  if (message) document.getElementById('lock-screen-message').textContent = message;
+  document.getElementById('subscription-lock-screen').classList.remove('hidden');
+}
+
+function hideSubscriptionLockScreen() {
+  document.getElementById('subscription-lock-screen').classList.add('hidden');
+}
+
+async function renewFromLockScreen() {
+  const btn = document.querySelector('#subscription-lock-screen .btn-primary');
+  btnLoading(btn, 'Processing...');
+  try {
+    const order = await POST('/payments/create-order', {
+      amount: 999,
+      currency: 'INR',
+      notes: { plan: 'Pro', user: state.currentUser?.email },
+    });
+    const rzpKey = RAZORPAY_KEY_ID;
+    const rzp = new Razorpay({
+      key          : rzpKey,
+      amount       : order.amount,
+      currency     : 'INR',
+      name         : 'Fynlo',
+      description  : 'Pro Plan — Renewal',
+      order_id     : order.orderId,
+      prefill      : { email: state.currentUser?.email || '' },
+      theme        : { color: '#0F9488' },
+      handler      : async (response) => {
+        try {
+          await POST('/payments/verify', {
+            razorpay_order_id    : response.razorpay_order_id,
+            razorpay_payment_id  : response.razorpay_payment_id,
+            razorpay_signature   : response.razorpay_signature,
+            plan_name            : 'Pro',
+          });
+          hideSubscriptionLockScreen();
+          showToast('✅ Subscription renewed! Welcome back.', 'success');
+          renderPage('dashboard');
+        } catch (err) {
+          showToast('Payment verification failed: ' + err.message, 'error');
+        }
+      },
+    });
+    rzp.open();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally { btnDone(btn); }
+}
+
 async function confirmUpgrade(planId) {
   const prices = { Pro: 999 };
   const amount = prices[planId] || 999;
@@ -3560,7 +3624,7 @@ async function confirmUpgrade(planId) {
     });
 
     // Step 2 — open Razorpay checkout
-    const rzpKey = window.RAZORPAY_KEY_ID || 'rzp_test_xxxx';
+    const rzpKey = RAZORPAY_KEY_ID;
     const rzp = new Razorpay({
       key          : rzpKey,
       amount       : order.amount,
