@@ -1,0 +1,17 @@
+{
+  "id": "/fynlo-landing-v2.html",
+  "name": "Fynlo",
+  "short_name": "Fynlo",
+  "description": "Fynlo — run your business at speed. Inventory, invoicing, attendance, payroll and GST in one place.",
+  "start_url": "./fynlo-landing-v2.html",
+  "scope": "./fynlo-landing-v2.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F6FAF9",
+  "theme_color": "#0F1B26",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

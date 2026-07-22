@@ -8,6 +8,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="manifest" href="manifest-landing.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0F1B26">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fynlo">
 <style>
   :root{
     --navy: #0F1B26;
@@ -183,6 +190,7 @@
   @media(min-width:720px){ footer .wrap{ flex-direction:row; justify-content:space-between; align-items:center; } }
   footer .credit{ font-size:12px; color:var(--ink-faint); }
   footer .credit a{ text-decoration:underline; text-underline-offset:3px; }
+  .hidden{ display:none !important; }
 </style>
 </head>
 <body>
@@ -196,6 +204,7 @@
       <a href="#testimonials">Stories</a>
       <a href="#pricing">Pricing</a>
       <div class="cta-group">
+        <button class="btn btn-ghost" onclick="window.location.href='fynlo-business.html'">📲 Install App</button>
         <a class="btn btn-ghost" href="fynlo-business.html">Sign Up / Login</a>
         <a class="btn btn-gradient" href="#pricing">Start free</a>
       </div>
@@ -390,6 +399,32 @@
     });
   }, { threshold: 0.4 });
   io.observe(flowTrack);
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw-landing.js', { scope: './fynlo-landing-v2.html' })
+        .catch((err) => console.warn('SW registration failed:', err));
+    });
+  }
+
+  let deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.remove('hidden'));
+  });
+
+  async function triggerPwaInstall() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.add('hidden'));
+  }
+
+  window.addEventListener('appinstalled', () => {
+    document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.add('hidden'));
+  });
 </script>
 
 </body>
