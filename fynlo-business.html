@@ -3022,7 +3022,21 @@ async function renderShopProfile() {
         <div class="card">
           <div class="card-header"><span class="card-title">👤 Personal Info</span></div>
           <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">${user.name}</span></div>
-          <div class="info-row"><span class="info-label">Email</span><span class="info-value">${user.email}</span></div>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value" style="display:flex;align-items:center;gap:8px;">
+              ${user.email}
+              <span id="biz-email-status">${user.email_verified ? '<span style="color:var(--success);font-size:11px;font-weight:700;">✓ Verified</span>' : '<span style="color:var(--text-3);font-size:11px;">Not verified</span>'}</span>
+            </span>
+          </div>
+          ${!user.email_verified ? `
+          <div style="text-align:right;margin:-4px 0 10px;">
+            <button class="btn btn-sm btn-ghost" id="biz-email-verify-btn" onclick="sendBizVerifyCode()">Verify email</button>
+          </div>
+          <div id="biz-email-code-row" class="hidden" style="display:flex;gap:8px;margin-bottom:12px;">
+            <input class="input" id="biz-email-code" placeholder="Enter 6-digit code" style="flex:1;">
+            <button class="btn btn-primary btn-sm" onclick="confirmBizVerifyCode()">Confirm</button>
+          </div>` : ''}
           <div class="info-row"><span class="info-label">Phone</span><span class="info-value">${user.phone||biz.phone||'—'}</span></div>
         </div>
         <div class="card">
@@ -3499,6 +3513,38 @@ async function markInvoicePaid(id) {
       showToast('Invoice marked as paid ✓', 'success');
       renderPage('invoices');
     } catch (err) { showToast(err.message, 'error'); }
+  }
+}
+
+async function sendBizVerifyCode() {
+  const btn = document.getElementById('biz-email-verify-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+  try {
+    const res = await POST('/auth/send-verify-code', { type: 'email' });
+    document.getElementById('biz-email-code-row').classList.remove('hidden');
+    if (res.sentByEmail) {
+      showToast('Code sent — check your inbox', 'success');
+    } else {
+      showToast(`Demo code: ${res.demoCode} (no email service connected yet)`, 'info');
+    }
+  } catch (err) {
+    showToast(err.message || 'Could not send code', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Resend code'; }
+  }
+}
+
+async function confirmBizVerifyCode() {
+  const code = document.getElementById('biz-email-code').value.trim();
+  if (!code) { showToast('Enter the code', 'error'); return; }
+  try {
+    await POST('/auth/confirm-verify-code', { type: 'email', code });
+    document.getElementById('biz-email-code-row').classList.add('hidden');
+    document.getElementById('biz-email-verify-btn').classList.add('hidden');
+    document.getElementById('biz-email-status').innerHTML = '<span style="color:var(--success);font-size:11px;font-weight:700;">✓ Verified</span>';
+    showToast('Email verified ✓', 'success');
+  } catch (err) {
+    showToast(err.message || 'Incorrect code', 'error');
   }
 }
 

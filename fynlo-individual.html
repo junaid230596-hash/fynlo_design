@@ -925,6 +925,8 @@ tr:hover td { background: #f8fafc; }
         Running a shop with staff and inventory instead?
         <a href="fynlo-business.html" style="color:var(--primary);font-weight:700;">Go to Business Sign Up / Login →</a>
       </div>
+
+      <button class="btn btn-ghost w-full pwa-install-btn hidden" style="margin-top:14px;" onclick="triggerPwaInstall()">📲 Install Fynlo App</button>
     </div>
   </div>
 </div>
@@ -1044,6 +1046,8 @@ tr:hover td { background: #f8fafc; }
     <div class="form-group"><label class="label">Confirm New Password</label><input class="input" id="pwd-confirm" type="password" placeholder="Re-enter new password"></div>
   </div>
   <button class="btn btn-primary w-full" onclick="resetPassword()">Update Password</button>
+
+  <button class="btn btn-ghost w-full pwa-install-btn hidden" style="margin-top:14px;" onclick="triggerPwaInstall()">📲 Install App</button>
 </div></div>
 
 <div id="modal-expenses" class="modal-bg"><div class="modal wide">
@@ -1400,7 +1404,11 @@ async function sendVerifyCode(type) {
   try {
     const res = await POST('/auth/send-verify-code', { type });
     document.getElementById(`acct-${type}-code-row`).classList.remove('hidden');
-    showToast(`Demo code: ${res.demoCode} (no email/SMS service connected yet)`, 'info');
+    if (res.sentByEmail) {
+      showToast('Code sent — check your inbox', 'success');
+    } else {
+      showToast(`Demo code: ${res.demoCode} (no email/SMS service connected yet)`, 'info');
+    }
   } catch (err) {
     showToast(err.message || 'Could not send code', 'error');
   } finally {
@@ -1740,6 +1748,33 @@ function showToast(msg, type = 'info') {
   container.appendChild(toast);
   setTimeout(() => { toast.remove(); }, 4000);
 }
+
+/* ===== PWA Install Prompt ===== */
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.remove('hidden'));
+});
+
+async function triggerPwaInstall() {
+  if (!deferredInstallPrompt) {
+    showToast('Already installed, or your browser doesn\'t support installing this app', 'info');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  const choice = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.add('hidden'));
+  if (choice.outcome === 'accepted') showToast('Installing Fynlo... ✓', 'success');
+}
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.add('hidden'));
+  showToast('Fynlo installed! Find it on your home screen 🎉', 'success');
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   const token = Auth.getToken();
