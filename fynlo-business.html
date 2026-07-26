@@ -1272,6 +1272,7 @@ tr:hover td { background: #f8fafc; }
 
 <div id="modal-employee-credentials" class="modal-bg"><div class="modal" style="max-width:420px;">
   <div class="modal-hdr"><h2>✅ Employee Added</h2><button class="modal-close" onclick="closeModal('employee-credentials')">×</button></div>
+  <div id="cred-email-status" style="font-size:12px;border-radius:10px;padding:10px 14px;margin-bottom:14px;"></div>
   <div style="font-size:13px;color:var(--text-2);margin-bottom:16px;">Share these login details with <span id="cred-emp-name" style="font-weight:700;"></span> so they can sign in to their own Fynlo account and use the QR code to punch in.</div>
   <div style="background:var(--bg);border:1px dashed var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
     <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Login Email</div>
@@ -3294,7 +3295,7 @@ async function saveEmployee() {
     closeModal('add-employee');
     renderPage('employees');
     if (data && data.tempPassword) {
-      showEmployeeCredentials(name, email, data.tempPassword);
+      showEmployeeCredentials(name, email, data.tempPassword, data.emailSent);
     } else {
       showToast('Employee added!', 'success');
     }
@@ -3303,10 +3304,24 @@ async function saveEmployee() {
   } finally { btnDone(btn); }
 }
 
-function showEmployeeCredentials(name, email, password) {
+function showEmployeeCredentials(name, email, password, emailSent) {
   document.getElementById('cred-emp-name').textContent = name;
   document.getElementById('cred-email').textContent = email;
   document.getElementById('cred-password').textContent = password;
+
+  const statusEl = document.getElementById('cred-email-status');
+  if (emailSent) {
+    statusEl.style.background = '#f0fdf4';
+    statusEl.style.border = '1px solid #bbf7d0';
+    statusEl.style.color = 'var(--success)';
+    statusEl.innerHTML = '✅ We\'ve emailed these login details (and an email-verification code) to ' + email + '.';
+  } else {
+    statusEl.style.background = '#fff7ed';
+    statusEl.style.border = '1px solid #fed7aa';
+    statusEl.style.color = '#92400e';
+    statusEl.innerHTML = '⚠️ No email was sent (email delivery isn\'t configured yet) — please share these details with them yourself.';
+  }
+
   openModal('employee-credentials');
 }
 
